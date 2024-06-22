@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "245000266478",
+    "firebase_url": "https://appdatxe-c8e0d-default-rtdb.firebaseio.com",
+    "project_id": "appdatxe-c8e0d",
+    "storage_bucket": "appdatxe-c8e0d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:245000266478:android:a39c8ae91662d14bdc09ff",
+        "android_client_info": {
+          "package_name": "com.example.app_datxe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcOXFUoseFrDxZCDWfdsuo-b2LITdPkQQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:245000266478:android:e74455c766df04b2dc09ff",
+        "android_client_info": {
+          "package_name": "com.example.apptxe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcOXFUoseFrDxZCDWfdsuo-b2LITdPkQQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
