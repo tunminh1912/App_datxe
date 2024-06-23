@@ -12,6 +12,9 @@ import android.location.LocationListener;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -49,11 +52,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     GoogleApiClient mGoogleApiClient;
     Location mlastLocation;
     LocationRequest mLocationRequest;
-    private ActivityDriverMapBinding binding;
-    private Button mLogout, mRequest;
+    private Button mLogout, mRequest, mSettings;
     private LatLng pickupLocation;
     private Boolean requestBol= false;
     private Marker pickupMarker;
+    private LinearLayout mInfoLayout;
+    private SupportMapFragment mapFragment;
+    private ImageView mDriverProfileImage;
+    private TextView mDriverName, mDriverPhone, mDriverCar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +72,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         mLogout = (Button) findViewById(R.id.logout);
         mRequest = (Button) findViewById(R.id.request);
+        mSettings = (Button) findViewById(R.id.settings);
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,6 +125,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
                     getCloseDriver();
                 }
+            }
+        });
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(CustomerMapActivity.this,CustomerSettingsActivity.class);
+                startActivity(intent);
+                return;
             }
         });
     }
