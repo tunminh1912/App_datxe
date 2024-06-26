@@ -47,7 +47,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     GoogleApiClient mGoogleApiClient;
     Location mlastLocation;
     LocationRequest mLocationRequest;
-    private ActivityDriverMapBinding binding;
     private Button mLogout;
     private String customerId = "";
     private Boolean isLoggingOut = false;
