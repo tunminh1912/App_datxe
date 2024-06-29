@@ -18,6 +18,9 @@
         tools:ignore="ObsoleteSdkInt"
         tools:targetApi="34">
         <activity
+            android:name=".DriverSettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".CustomerSettingsActivity"
             android:exported="false" />
 
