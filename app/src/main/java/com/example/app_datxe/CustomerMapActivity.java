@@ -61,6 +61,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
 
+    private LatLng destinationLatLng;
+
     private Button mLogout, mRequest, mSettings;
     private LatLng pickupLocation;
     private Boolean requestBol= false;
@@ -88,6 +90,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             mapFragment.getMapAsync(this);
         }
 
+        destinationLatLng = new LatLng(0.0,0.0);
+
         mDriverInfo = (LinearLayout) findViewById(R.id.driverInfo);
         mDriverProfileImage = (ImageView) findViewById(R.id.driverProfileImage);
         mDriverName = (TextView) findViewById(R.id.driverName);
@@ -111,39 +115,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             @Override
             public void onClick(View v) {
                 if (requestBol) {
-                    requestBol = false;
-                    geoQuery.removeAllListeners();
-                    driverLocationRef.removeEventListener(driverLocationRefListener);
-
-                    if(driverFoundID != null){
-                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users")
-                                .child("Driver").child(driverFoundID).child("CustomerRequest");
-                        driverRef.removeValue();
-                        driverFoundID = null;
-                    }
-
-                    driverFound = false;
-                    radius = 1;
-                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("CustomerRequest");
-                    GeoFire geoFire = new GeoFire(ref);
-                    geoFire.removeLocation(userId);
-
-                    if(pickupMarker != null){
-                        pickupMarker.remove();
-                    }
-                    if(mDriverMarker != null){
-                        mDriverMarker.remove();
-                    }
-                    mRequest.setText("Call uber");
-
-                    mDriverInfo.setVisibility(View.GONE);
-                    mDriverName.setText("");
-                    mDriverPhone.setText("");
-                    mDriverCar.setText("Destination: --");
-                    mDriverProfileImage.setImageResource(R.mipmap.ic_default_user);
-
+                    endRide();
                 }else {
                     requestBol = true;
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -179,17 +151,16 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
         Places.initialize(getApplicationContext(), "AIzaSyASTJkVnv4yGPF3PggRJvWCg_vOsuIQqZc");
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
 
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
-                Log.i("PlaceSelection", "Place: " + place.getName() + ", " + place.getId());
                 destination = place.getName().toString();
+                destinationLatLng = place.getLatLng();
             }
             @Override
             public void onError(@NonNull Status status) {
-                Log.e("PlaceSelection", "An error occurred: " + status);
             }
         });
     }
@@ -203,7 +174,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         GeoFire geoFire = new GeoFire(driverLocation);
         geoQuery = geoFire.queryAtLocation(new GeoLocation(pickupLocation.latitude, pickupLocation.longitude),radius);
-        geoQuery.removeAllListeners();  
+        geoQuery.removeAllListeners();
 
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
@@ -217,10 +188,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     HashMap map = new HashMap();
                     map.put("customerRideId",customerId);
                     map.put("destination",destination);
+                    map.put("destinationLat",destinationLatLng.latitude);
+                    map.put("destinationLng",destinationLatLng.longitude);
                     driverRef .updateChildren(map);
 
                     getDriverInfo();
                     getDriverLocation();
+                    getHasRideEnded();
                     mRequest.setText("Looking for driver location...");
                 }
             }
@@ -328,6 +302,63 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         });
+    }
+
+    private DatabaseReference driverHasEndedRef;
+    private ValueEventListener driverHasEndedRefListener;
+    private void getHasRideEnded(){
+        driverHasEndedRef = FirebaseDatabase.getInstance().getReference().child("Users")
+                .child("Driver").child(driverFoundID).child("customerRequest").child("customerRideId");
+        driverHasEndedRefListener = driverHasEndedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+
+                }else {
+                    endRide();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+    private void endRide(){
+        requestBol = false;
+        geoQuery.removeAllListeners();
+        driverLocationRef.removeEventListener(driverLocationRefListener);
+        driverHasEndedRef.removeEventListener(driverHasEndedRefListener);
+
+        if(driverFoundID != null){
+            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users")
+                    .child("Driver").child(driverFoundID).child("CustomerRequest");
+            driverRef.removeValue();
+            driverFoundID = null;
+        }
+
+        driverFound = false;
+        radius = 1;
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("CustomerRequest");
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.removeLocation(userId);
+
+        if(pickupMarker != null){
+            pickupMarker.remove();
+        }
+        if(mDriverMarker != null){
+            mDriverMarker.remove();
+        }
+        mRequest.setText("Call uber");
+
+        mDriverInfo.setVisibility(View.GONE);
+        mDriverName.setText("");
+        mDriverPhone.setText("");
+        mDriverCar.setText("");
+        mDriverProfileImage.setImageResource(R.mipmap.ic_default_user);
     }
 
 

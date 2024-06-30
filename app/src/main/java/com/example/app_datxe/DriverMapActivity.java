@@ -58,8 +58,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     LocationRequest mLocationRequest;
     private SupportMapFragment mapFragment;
 
-    private Button mLogout, mSettings;
-    private String customerId = "";
+    private Button mLogout, mSettings, mRideStatus;
+    private int status = 0;
+    private String customerId = "", destination;
+    private LatLng destinationLatLng;
     private Boolean isLoggingOut = false;
 
     private LinearLayout mCustomerInfo;
@@ -89,6 +91,26 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         mSettings = (Button) findViewById(R.id.settings);
         mLogout = (Button) findViewById(R.id.logout);
+        mRideStatus = (Button) findViewById(R.id.rideStatus);
+        mRideStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switch (status){
+                    case 1:
+                        status = 2;
+                        erasePolylines();
+                        if(destinationLatLng.latitude != 0.0 && destinationLatLng.longitude != 0.0){
+                            getRouteToMarker(destinationLatLng);
+                        }
+                        mRideStatus.setText("Drive completed");
+                        break;
+                    case 2:
+                        endRide();
+                        break;
+                }
+            }
+        });
+
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -99,7 +121,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 Intent intent = new Intent(DriverMapActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
-                return;
             }
         });
 
@@ -123,24 +144,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()){
-                        customerId = dataSnapshot.getValue().toString();
-                        getAssignedCustomerPickupLocation();
-                        getAssignedCustomerDestination();
-                        getAssignedCustomerInfo();
+                    status = 1;
+                    customerId = dataSnapshot.getValue().toString();
+                    getAssignedCustomerPickupLocation();
+                    getAssignedCustomerDestination();
+                    getAssignedCustomerInfo();
                 }else{
-                    erasePolylines();
-                    customerId = "";
-                    if(pickupMarker != null){
-                        pickupMarker.remove();
-                    }
-                    if(assignedCustomerPickupLocationRefListener != null){
-                        assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
-                    }
-                    mCustomerInfo.setVisibility(View.GONE);
-                    mCustomerName.setText("");
-                    mCustomerPhone.setText("");
-                    mCustomerDestination.setText("Destination: --");
-                    mCustomerProfileImage.setImageResource(R.mipmap.ic_default_user);
+                    endRide();
                 }
             }
 
@@ -197,15 +207,28 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private void getAssignedCustomerDestination(){
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users")
-                .child("Driver").child(driverId).child("customerRequest").child("destination");
+                .child("Driver").child(driverId).child("customerRequest");
         assignedCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()){
-                    String destination = dataSnapshot.getValue().toString();
-                    mCustomerDestination.setText("Destination: "+destination);
-                }else{
-                    mCustomerDestination.setText("Destination: --");
+                if(dataSnapshot.exists()) {
+                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    if(map.get("destination") != null){
+                        destination = map.get("destination").toString();
+                        mCustomerDestination.setText("Destination: " + destination);
+                    }else{
+                        mCustomerDestination.setText("Destination: --");
+                    }
+
+                    Double destinationLat = 0.0;
+                    Double destinationLng = 0.0;
+                    if(map.get("destinationLat") != null){
+                        destinationLat = Double.valueOf(map.get("destinationLat").toString());
+                    }
+                    if(map.get("destinationLng") != null){
+                        destinationLng = Double.valueOf(map.get("destinationLng").toString());
+                        destinationLatLng = new LatLng(destinationLat,destinationLng);
+                    }
                 }
             }
 
@@ -240,6 +263,33 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         });
+    }
+
+    private void endRide(){
+        mRideStatus.setText("Picked customer");
+        erasePolylines();
+
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users")
+                .child("Driver").child(userId).child("CustomerRequest");
+        driverRef.removeValue();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("CustomerRequest");
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.removeLocation(customerId);
+        customerId = "";
+
+        if(pickupMarker != null){
+            pickupMarker.remove();
+        }
+        if(assignedCustomerPickupLocationRefListener != null){
+            assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
+        }
+        mCustomerInfo.setVisibility(View.GONE);
+        mCustomerName.setText("");
+        mCustomerPhone.setText("");
+        mCustomerDestination.setText("Destination: --");
+        mCustomerProfileImage.setImageResource(R.mipmap.ic_default_user);
     }
 
 
@@ -351,7 +401,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
 
     private List<Polyline> polylines;
-    private static final int[] COLORS = new int[]{R.color.primary};
+    private static final int[] COLORS = new int[]{R.color.primary_dark};
 
     @Override
     public void onRoutingFailure(RouteException e) {

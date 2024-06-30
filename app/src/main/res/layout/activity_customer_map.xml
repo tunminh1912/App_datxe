@@ -50,7 +50,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        android:visibility="gone">
 
         <LinearLayout
             android:id="@+id/driverInfo"
@@ -95,13 +96,11 @@
 
             </LinearLayout>
         </LinearLayout>
-
-        <Button
-            android:id="@+id/request"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Call Uber"
-            android:layout_gravity="bottom"/>
-
     </LinearLayout>
+    <Button
+        android:id="@+id/request"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Call Uber"
+        android:layout_gravity="bottom"/>
 </FrameLayout>

@@ -89,7 +89,6 @@ public class CustomerSettingsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finish();
-                return;
             }
         });
 
