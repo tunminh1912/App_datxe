@@ -172,12 +172,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         });
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "AIzaSyAtLLz1TeqefidkKyu2oFVy4tyQ-n97byo");
+
         }
 
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
+        Places.initialize(getApplicationContext(), "AIzaSyASTJkVnv4yGPF3PggRJvWCg_vOsuIQqZc");
         autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
 
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
