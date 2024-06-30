@@ -120,7 +120,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     requestBol = true;
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("CustomerRequest");
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
                     GeoFire geoFire = new GeoFire(ref);
                     geoFire.setLocation(userId, new GeoLocation(mlastLocation.getLatitude(), mlastLocation.getLongitude()));
 
@@ -333,7 +333,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         if(driverFoundID != null){
             DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users")
-                    .child("Driver").child(driverFoundID).child("CustomerRequest");
+                    .child("Driver").child(driverFoundID).child("customerRequest");
             driverRef.removeValue();
             driverFoundID = null;
         }
@@ -342,7 +342,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         radius = 1;
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("CustomerRequest");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
         GeoFire geoFire = new GeoFire(ref);
         geoFire.removeLocation(userId);
 
@@ -390,7 +390,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
 
     }
 

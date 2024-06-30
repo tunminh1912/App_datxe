@@ -129,7 +129,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             public void onClick(View view) {
                 Intent intent = new Intent(DriverMapActivity.this, DriverSettingsActivity.class);
                 startActivity(intent);
-                finish();
+                return;
             }
         });
 
@@ -164,7 +164,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private DatabaseReference assignedCustomerPickupLocationRef;
     private ValueEventListener assignedCustomerPickupLocationRefListener;
     private void getAssignedCustomerPickupLocation(){
-        assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference().child("CustomerRequest").child(customerId).child("l");
+        assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("l");
         assignedCustomerPickupLocationRefListener = assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -271,10 +271,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users")
-                .child("Driver").child(userId).child("CustomerRequest");
+                .child("Driver").child(userId).child("customerRequest");
         driverRef.removeValue();
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("CustomerRequest");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
         GeoFire geoFire = new GeoFire(ref);
         geoFire.removeLocation(customerId);
         customerId = "";
@@ -321,7 +321,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
 
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             DatabaseReference refAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");
