@@ -72,6 +72,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private ImageView mDriverProfileImage;
     private TextView mDriverName, mDriverPhone, mDriverCar;
 
+    private Button zoomInButton,zoomOutButton;
+
     private String destination;
 
 
@@ -101,6 +103,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mLogout = (Button) findViewById(R.id.logout);
         mRequest = (Button) findViewById(R.id.request);
         mSettings = (Button) findViewById(R.id.settings);
+        zoomInButton = (Button) findViewById(R.id.zoomin);
+        zoomOutButton = (Button) findViewById(R.id.zoomout);
+
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -143,9 +148,19 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
         });
 
-        if (!Places.isInitialized()) {
+        zoomInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mMap.animateCamera(CameraUpdateFactory.zoomIn());
+            }
+        });
 
-        }
+        zoomOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mMap.animateCamera(CameraUpdateFactory.zoomOut());
+            }
+        });
 
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
@@ -362,7 +377,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     }
 
 
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -373,6 +387,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
+
+        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                float currentZoom = mMap.getCameraPosition().zoom;
+                Log.d("Zoom Level", "Current Zoom: " + currentZoom);
+            }
+        });
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -387,11 +409,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     @Override
     public void onLocationChanged(@NonNull Location location) {
         mlastLocation = location;
-
-        LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
-
     }
 
 

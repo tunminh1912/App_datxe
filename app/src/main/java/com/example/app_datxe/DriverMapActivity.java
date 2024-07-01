@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -67,6 +68,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private LinearLayout mCustomerInfo;
     private ImageView mCustomerProfileImage;
     private TextView mCustomerName, mCustomerPhone, mCustomerDestination;
+
+    private Button zoomInButton,zoomOutButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +92,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mCustomerName = (TextView) findViewById(R.id.customerName);
         mCustomerPhone = (TextView) findViewById(R.id.customerPhone);
         mCustomerDestination = (TextView) findViewById(R.id.customerDestination);
+
+        zoomInButton = (Button) findViewById(R.id.zoomin);
+        zoomOutButton = (Button) findViewById(R.id.zoomout);
 
         mSettings = (Button) findViewById(R.id.settings);
         mLogout = (Button) findViewById(R.id.logout);
@@ -133,6 +140,19 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
 
+        zoomInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mMap.animateCamera(CameraUpdateFactory.zoomIn());
+            }
+        });
+
+        zoomOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mMap.animateCamera(CameraUpdateFactory.zoomOut());
+            }
+        });
         getAssignedCustomer();
     }
 
@@ -302,6 +322,14 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
         buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
+
+        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                float currentZoom = mMap.getCameraPosition().zoom;
+                Log.d("Zoom Level", "Current Zoom: " + currentZoom);
+            }
+        });
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -316,12 +344,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public void onLocationChanged(@NonNull Location location) {
         if(getApplicationContext() != null){
-
             mlastLocation = location;
-
-            LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
 
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             DatabaseReference refAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");
