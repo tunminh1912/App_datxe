@@ -19,6 +19,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -36,6 +41,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
@@ -47,13 +54,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
-public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, RoutingListener{
 
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
@@ -63,7 +71,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     private LatLng destinationLatLng;
 
-    private Button mLogout, mRequest, mSettings;
+    private Button mRequest, mSettings;
     private LatLng pickupLocation;
     private Boolean requestBol= false;
     private Marker pickupMarker;
@@ -71,10 +79,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private LinearLayout mDriverInfo;
     private ImageView mDriverProfileImage;
     private TextView mDriverName, mDriverPhone, mDriverCar;
+    private TextView mQuangduong,mSotien;
 
     private Button zoomInButton,zoomOutButton;
 
     private String destination;
+    private Marker destinationMarker;
+    private float khoang_cach;
+    private int cost;
 
 
     @Override
@@ -98,29 +110,23 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mDriverProfileImage = (ImageView) findViewById(R.id.driverProfileImage);
         mDriverName = (TextView) findViewById(R.id.driverName);
         mDriverPhone = (TextView) findViewById(R.id.driverPhone);
-        mDriverCar = (TextView) findViewById(R.id.driverCar) ;
+        mDriverCar = (TextView) findViewById(R.id.driverCar);
+        mQuangduong = (TextView) findViewById(R.id.quangduong);
+        mSotien = (TextView) findViewById(R.id.sotien);
 
-        mLogout = (Button) findViewById(R.id.logout);
         mRequest = (Button) findViewById(R.id.request);
         mSettings = (Button) findViewById(R.id.settings);
         zoomInButton = (Button) findViewById(R.id.zoomin);
         zoomOutButton = (Button) findViewById(R.id.zoomout);
 
-        mLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(CustomerMapActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+        polylines = new ArrayList<>();
 
         mRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (requestBol) {
                     endRide();
+                    destinationMarker.remove();
                 }else {
                     requestBol = true;
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -173,6 +179,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onPlaceSelected(@NonNull Place place) {
                 destination = place.getName().toString();
                 destinationLatLng = place.getLatLng();
+
+                if(destinationLatLng == null){
+                    destinationMarker.remove();
+                }
+                LatLng latLng_destination = place.getLatLng();
+                 destinationMarker = mMap.addMarker(new MarkerOptions().position(latLng_destination).title("Your driver")
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_destination)));
+                getRouteToMarker(destinationLatLng);
             }
             @Override
             public void onError(@NonNull Status status) {
@@ -205,7 +219,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     map.put("destination",destination);
                     map.put("destinationLat",destinationLatLng.latitude);
                     map.put("destinationLng",destinationLatLng.longitude);
-                    driverRef .updateChildren(map);
+                    map.put("cost",cost);
+                    driverRef.updateChildren(map);
 
                     getDriverInfo();
                     getDriverLocation();
@@ -268,25 +283,32 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     Loc2.setLongitude(driverLatLng.longitude);
 
                     float distance = Loc1.distanceTo(Loc2);
-
                     // thong bao khi driver den
                     if(distance<100){
                         mRequest.setText("Driver's here");
                     }else{
-                        mRequest.setText("Driver found: " + String.valueOf(distance));
+                        mRequest.setText("Cancel call driver");
                     }
-
                     mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLatLng).title("Your driver")
                             .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_car)));
-
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
+    }
+
+    private void getRouteToMarker(LatLng pickupLatLng) {
+        Routing routing = new Routing.Builder()
+                .key("AIzaSyASTJkVnv4yGPF3PggRJvWCg_vOsuIQqZc")
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .withListener(this)
+                .alternativeRoutes(false)
+                .waypoints(new LatLng(mlastLocation.getLatitude(),mlastLocation.getLongitude()), pickupLatLng)
+                .build();
+        routing.execute();
     }
 
     private void getDriverInfo(){
@@ -299,17 +321,19 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
                     Map<String,Object> map = (Map<String, Object>) dataSnapshot.getValue();
                     if(map.get("Name") != null){
-                        mDriverName.setText(map.get("Name").toString());
+                        mDriverName.setText("Name: "+map.get("Name").toString());
                     }
                     if(map.get("Phone") != null){
-                        mDriverPhone.setText(map.get("Phone").toString());
+                        mDriverPhone.setText("Phone: "+map.get("Phone").toString());
                     }
                     if(map.get("Car") != null){
-                        mDriverCar.setText(map.get("Car").toString());
+                        mDriverCar.setText("Car: "+map.get("Car").toString());
                     }
                     if(map.get("profileImageUrl") != null){
                         Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(mDriverProfileImage);
                     }
+                    mQuangduong.setText(khoang_cach + "km");
+                    mSotien.setText(cost + "VND");
                 }
             }
 
@@ -328,9 +352,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()){
-
                 }else {
                     endRide();
+                    destinationMarker.remove();
                 }
             }
 
@@ -342,6 +366,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     private void endRide(){
         requestBol = false;
+        erasePolylines();
+
         geoQuery.removeAllListeners();
         driverLocationRef.removeEventListener(driverLocationRefListener);
         driverHasEndedRef.removeEventListener(driverHasEndedRefListener);
@@ -370,9 +396,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mRequest.setText("Call uber");
 
         mDriverInfo.setVisibility(View.GONE);
-        mDriverName.setText("");
-        mDriverPhone.setText("");
-        mDriverCar.setText("");
+        mDriverName.setText("Tên: ");
+        mDriverPhone.setText("Phone: ");
+        mDriverCar.setText("Car: ");
         mDriverProfileImage.setImageResource(R.mipmap.ic_default_user);
     }
 
@@ -409,6 +435,23 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     @Override
     public void onLocationChanged(@NonNull Location location) {
         mlastLocation = location;
+
+        mlastLocation.getLatitude();
+        mlastLocation.getLongitude();
+
+        if(destinationLatLng != null){
+            khoang_cach = (float) calculateDistance(mlastLocation, destinationLatLng)/1000;
+            cost = (int) (khoang_cach * 15000);
+        }
+    }
+
+    // Hàm tinh quang duong
+    private float calculateDistance(Location startLocation, LatLng endLatLng) {
+        Location endLocation = new Location("");
+        endLocation.setLatitude(endLatLng.latitude);
+        endLocation.setLongitude(endLatLng.longitude);
+
+        return startLocation.distanceTo(endLocation);
     }
 
 
@@ -452,5 +495,56 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    private List<Polyline> polylines;
+    private static final int[] COLORS = new int[]{R.color.primary_dark};
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        if(e != null) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortesRouteIndex) {
+        if(polylines.size()>0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int i = 0; i <route.size(); i++) {
+
+            //In case of more than 5 alternative routes
+            int colorIndex = i % COLORS.length;
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(COLORS[colorIndex]));
+            polyOptions.width(10 + i * 3);
+            polyOptions.addAll(route.get(i).getPoints());
+            Polyline polyline = mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+        }
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+    }
+    private void erasePolylines(){
+        for(Polyline line : polylines){
+            line.remove();
+        }
+        polylines.clear();
     }
 }

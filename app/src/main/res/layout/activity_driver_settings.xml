@@ -9,6 +9,11 @@
     tools:context=".CustomerSettingsActivity"
     android:orientation="vertical"
     android:padding="20sp">
+    <Button
+        android:id="@+id/back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"/>
     <ImageView
         android:id="@+id/profileImage"
         android:layout_width="100sp"
@@ -49,11 +54,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Confirm"/>
-
     <Button
-        android:id="@+id/back"
+        android:id="@+id/logout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Back"/>
+        android:text="Logout"/>
 
 </LinearLayout>

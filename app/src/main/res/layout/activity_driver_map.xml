@@ -11,19 +11,11 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
-    <Button
-        android:id="@+id/logout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Logout"/>
-
     <Button
         android:id="@+id/settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Setting"
-        android:layout_gravity="end"/>
+        android:text="Setting"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -68,7 +60,7 @@
                     android:layout_width="100sp"
                     android:layout_height="100sp"
                     android:src="@mipmap/ic_default_user"
-                    android:padding="20sp"/>
+                    android:padding="10sp"/>
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -79,23 +71,28 @@
                         android:id="@+id/customerDestination"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:paddingBottom="10sp"
+                        android:paddingTop="10sp"
+                        android:textStyle="bold"
+                        android:textSize="16dp"
                         android:text="Destination: --"/>
 
                     <TextView
                         android:id="@+id/customerName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:paddingBottom="10sp"
-                        android:paddingTop="20sp"/>
+                        android:paddingTop="10sp"/>
 
                     <TextView
                         android:id="@+id/customerPhone"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:paddingBottom="10sp"
-                        android:paddingTop="20sp"/>
+                        android:paddingTop="10sp"/>
 
+                    <TextView
+                        android:id="@+id/sotien"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="10sp"/>
                 </LinearLayout>
             </LinearLayout>
             <Button

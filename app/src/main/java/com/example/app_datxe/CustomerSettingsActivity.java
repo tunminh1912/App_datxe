@@ -52,6 +52,7 @@ public class CustomerSettingsActivity extends AppCompatActivity {
     private String mName;
     private String mPhone;
     private String mProfileImageUrl;
+    private Button mLogout;
 
     private Uri resultUri;
     @Override
@@ -69,6 +70,7 @@ public class CustomerSettingsActivity extends AppCompatActivity {
 
         mBack = (Button) findViewById(R.id.back);
         mConfirm = (Button) findViewById(R.id.confirm);
+        mLogout = (Button) findViewById(R.id.logout);
 
         mProfileImage = (ImageView) findViewById(R.id.profileImage);
 
@@ -88,6 +90,16 @@ public class CustomerSettingsActivity extends AppCompatActivity {
         mBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                finish();
+            }
+        });
+
+        mLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(CustomerSettingsActivity.this, MainActivity.class);
+                startActivity(intent);
                 finish();
             }
         });

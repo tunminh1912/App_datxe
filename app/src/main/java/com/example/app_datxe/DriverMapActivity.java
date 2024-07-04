@@ -67,9 +67,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private LinearLayout mCustomerInfo;
     private ImageView mCustomerProfileImage;
-    private TextView mCustomerName, mCustomerPhone, mCustomerDestination;
+    private TextView mCustomerName, mCustomerPhone, mCustomerDestination, mCost;
 
     private Button zoomInButton,zoomOutButton;
+    private Marker destinationMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,12 +93,12 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mCustomerName = (TextView) findViewById(R.id.customerName);
         mCustomerPhone = (TextView) findViewById(R.id.customerPhone);
         mCustomerDestination = (TextView) findViewById(R.id.customerDestination);
+        mCost = (TextView) findViewById(R.id.sotien);
 
         zoomInButton = (Button) findViewById(R.id.zoomin);
         zoomOutButton = (Button) findViewById(R.id.zoomout);
 
         mSettings = (Button) findViewById(R.id.settings);
-        mLogout = (Button) findViewById(R.id.logout);
         mRideStatus = (Button) findViewById(R.id.rideStatus);
         mRideStatus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,26 +109,23 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         erasePolylines();
                         if(destinationLatLng.latitude != 0.0 && destinationLatLng.longitude != 0.0){
                             getRouteToMarker(destinationLatLng);
+
+                            if(destinationMarker != null){
+                                destinationMarker.remove();
+                            }
+                            LatLng latLng_destination = new LatLng(destinationLatLng.latitude,destinationLatLng.longitude);
+                            destinationMarker = mMap.addMarker(new MarkerOptions().position(latLng_destination).title("Your driver")
+                                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_destination)));
+
+                            getRouteToMarker(destinationLatLng);
                         }
                         mRideStatus.setText("Drive completed");
                         break;
                     case 2:
                         endRide();
+                        destinationMarker.remove();
                         break;
                 }
-            }
-        });
-
-        mLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isLoggingOut = true;
-                disconnectDriver();
-
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(DriverMapActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
             }
         });
 
@@ -240,6 +238,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         mCustomerDestination.setText("Destination: --");
                     }
 
+                    if(map.get("cost")!=null){
+                        mCost.setText(map.get("cost") + "VND");
+                    }
+
                     Double destinationLat = 0.0;
                     Double destinationLng = 0.0;
                     if(map.get("destinationLat") != null){
@@ -268,10 +270,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
                     Map<String,Object> map = (Map<String, Object>) dataSnapshot.getValue();
                     if(map.get("Name") != null){
-                        mCustomerName.setText(map.get("Name").toString());
+                        mCustomerName.setText("Name: "+map.get("Name").toString());
                     }
                     if(map.get("Phone") != null){
-                        mCustomerPhone.setText(map.get("Phone").toString());
+                        mCustomerPhone.setText("Phone: "+map.get("Phone").toString());
                     }
                     if(map.get("profileImageUrl") != null){
                         Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(mCustomerProfileImage);
@@ -459,8 +461,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
-
-            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -21,6 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.firebase.geofire.GeoFire;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -40,7 +41,7 @@ import java.util.Map;
 
 public class DriverSettingsActivity extends AppCompatActivity {
     private EditText mNameField, mPhoneField, mCarField;
-    private Button mBack,mConfirm;
+    private Button mBack,mConfirm,mLogout;;
     private ImageView mProfileImage;
 
     private FirebaseAuth mAuth;
@@ -69,6 +70,7 @@ public class DriverSettingsActivity extends AppCompatActivity {
 
         mBack = (Button) findViewById(R.id.back);
         mConfirm = (Button) findViewById(R.id.confirm);
+        mLogout = (Button) findViewById(R.id.logout);
 
         mProfileImage = (ImageView) findViewById(R.id.profileImage);
 
@@ -92,6 +94,16 @@ public class DriverSettingsActivity extends AppCompatActivity {
             }
         });
 
+        mLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                disconnectDriver();
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(DriverSettingsActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
         mProfileImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,7 +112,14 @@ public class DriverSettingsActivity extends AppCompatActivity {
                 startActivityForResult(intent, 1);
             }
         });
+    }
 
+    private void disconnectDriver(){
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("driverAvailable");
+
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.removeLocation(userId);
     }
 
     private void getUserInfo(){
