@@ -44,6 +44,7 @@ public class DriverLoginActivity extends AppCompatActivity {
             return insets;
         });
 
+        //khoi tao bien de truy cap vao firebaseauth
         mAuth = FirebaseAuth.getInstance();
 
         firebaseAuthListener = new FirebaseAuth.AuthStateListener() {
@@ -51,6 +52,7 @@ public class DriverLoginActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getInstance().getCurrentUser();
 
+                //kiem tra co user nao login chua
                 if(user != null){
                     Intent intent = new Intent(DriverLoginActivity.this, DriverMapActivity.class);
                     startActivity(intent);

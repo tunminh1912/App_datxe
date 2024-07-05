@@ -132,6 +132,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+                    //Goi geofire de luu tru va truy van vi tri dia ly
                     GeoFire geoFire = new GeoFire(ref);
                     geoFire.setLocation(userId, new GeoLocation(mlastLocation.getLatitude(), mlastLocation.getLongitude()));
 
@@ -186,7 +187,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 LatLng latLng_destination = place.getLatLng();
                  destinationMarker = mMap.addMarker(new MarkerOptions().position(latLng_destination).title("Your driver")
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_destination)));
-                getRouteToMarker(destinationLatLng);
+                 getRouteToMarker(destinationLatLng);
             }
             @Override
             public void onError(@NonNull Status status) {
@@ -199,6 +200,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private String driverFoundID;
     GeoQuery geoQuery;
     private void getCloseDriver(){
+        // tham chieu
         DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference().child("driverAvailable");
 
         GeoFire geoFire = new GeoFire(driverLocation);
